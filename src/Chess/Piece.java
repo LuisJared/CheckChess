@@ -41,6 +41,11 @@ public class Piece
 		
 		return move;
 	}
+	
+	public void possibleMovesForPiece(Position positionCheck)
+	{
+		
+	}
 
 	public ArrayList<Position> getPossibleMoves() 
 	{

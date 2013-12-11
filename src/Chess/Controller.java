@@ -198,27 +198,22 @@ public class Controller
 		{
 			for(int x = 0; x < maxHeight; x++)
 			{
-				if(board.getChessBoardSquare(x, y).getPiece() != board.getBlankPiece())
+				Piece currentPiece = board.getChessBoardSquare(x, y).getPiece();
+				
+				if(currentPiece != board.getBlankPiece() && currentPiece.getPieceColor().equals(colorCheck))
 				{
-					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor().equals(colorCheck))
+					Position positionCheck = new Position(x, y);
+					ArrayList<Position> pieceMoves = board.getChessBoardSquare(x, y).getPiece().getPossibleMoves();
+					
+					possibleMovesForPiece(currentPiece, positionCheck);
+					
+					for(int i = 0; !inCheck && i < pieceMoves.size(); i++)
 					{
-						Position positionCheck = new Position(x, y);
-						Piece currentPiece = board.getChessBoardSquare(x, y).getPiece();
-						ArrayList<Position> pieceMoves = board.getChessBoardSquare(x, y).getPiece().getPossibleMoves();
+						Position indexPosition = pieceMoves.get(i);
 						
-						possibleMovesForPiece(currentPiece, positionCheck);
-						
-						for(int i = 0; i < pieceMoves.size(); i++)
+						if(indexPosition.equals(whiteKingPosition) || indexPosition.equals(blackKingPosition))
 						{
-							if((pieceMoves.get(i).getPositionX() == whiteKingPosition.getPositionX() 
-									&& pieceMoves.get(i).getPositionY() == whiteKingPosition.getPositionY())
-								||
-								(pieceMoves.get(i).getPositionX() == blackKingPosition.getPositionX())
-									&& pieceMoves.get(i).getPositionY() == blackKingPosition.getPositionY()
-							)
-							{
-								inCheck = true;
-							}
+							inCheck = true;
 						}
 					}
 				}
@@ -242,32 +237,32 @@ public class Controller
 		{
 			System.out.print("\nPossible moves for Rook at " + position + ": ");
 			// origin to top
-			topPossibleMoves(piece, x1, y1);
+			topPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom
-			bottomPossibleMoves(piece, x1, y1);
+			bottomPossibleMoves(piece, positionCheck);
 			
 			// origin to right
-			rightPossibleMoves(piece, x1, y1);
+			rightPossibleMoves(piece, positionCheck);
 			
 			// origin to left
-			leftPossibleMoves(piece, x1, y1);			
+			leftPossibleMoves(piece, positionCheck);
 		}		
 		// BISHOP
 		else if(pieceType.equals("b"))
 		{
 			System.out.print("\nPossible moves for Bishop at " + position + ": ");
 			// origin to top left
-			topLeftPossibleMoves(piece, x1, y1);
+			topLeftPossibleMoves(piece, positionCheck);
 			
 			// origin to top right
-			topRightPossibleMoves(piece, x1, y1);
+			topRightPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom left
-			bottomLeftPossibleMoves(piece, x1, y1);
+			bottomLeftPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom right
-			bottomRightPossibleMoves(piece, x1, y1);			
+			bottomRightPossibleMoves(piece, positionCheck);			
 		}
 		
 		// QUEEN
@@ -275,28 +270,28 @@ public class Controller
 		{
 			System.out.print("\nPossible moves for Queen at " + position + ": ");
 			// origin to top left
-			topLeftPossibleMoves(piece, x1, y1);
+			topLeftPossibleMoves(piece, positionCheck);
 			
 			// origin to top
-			topPossibleMoves(piece, x1, y1);
+			topPossibleMoves(piece, positionCheck);
 			
 			// origin to top right
-			topRightPossibleMoves(piece, x1, y1);
+			topRightPossibleMoves(piece, positionCheck);
 			
 			// origin to the right
-			rightPossibleMoves(piece, x1, y1);
+			rightPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom right
-			bottomRightPossibleMoves(piece, x1, y1);
+			bottomRightPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom
-			bottomPossibleMoves(piece, x1, y1);
+			bottomPossibleMoves(piece, positionCheck);
 			
 			// origin to bottom left
-			bottomLeftPossibleMoves(piece, x1, y1);
+			bottomLeftPossibleMoves(piece, positionCheck);
 			
 			// origin to the left
-			leftPossibleMoves(piece, x1, y1);			
+			leftPossibleMoves(piece, positionCheck);
 		}
 		
 		// KNIGHT
@@ -305,28 +300,28 @@ public class Controller
 			System.out.print("\nPossible moves for Knight at " + position + ": ");
 			
 			// top left
-			knightTopLeftPossibleMove(piece, x1, y1);
+			knightTopLeftPossibleMove(piece, positionCheck);
 			
 			// top top left
-			knightTopTopLeftPossibleMove(piece, x1, y1);
+			knightTopTopLeftPossibleMove(piece, positionCheck);
 			
 			// top top right
-			knightTopTopRightPossibleMove(piece, x1, y1);
+			knightTopTopRightPossibleMove(piece, positionCheck);
 			
 			// top right
-			knightTopRightPossibleMove(piece, x1, y1);
+			knightTopRightPossibleMove(piece, positionCheck);
 			
 			// bottom right
-			knightBottomRightPossibleMove(piece, x1, y1);
+			knightBottomRightPossibleMove(piece, positionCheck);
 			
 			// bottom bottom right
-			knightBottomBottomRightPossibleMove(piece, x1, y1);
+			knightBottomBottomRightPossibleMove(piece, positionCheck);
 			
 			// bottom bottom left
-			knightBottomBottomLeftPossibleMove(piece, x1, y1);
+			knightBottomBottomLeftPossibleMove(piece, positionCheck);
 			
 			// bottom left
-			knightBottomLeftPossibleMove(piece, x1, y1);
+			knightBottomLeftPossibleMove(piece, positionCheck);
 		}
 		
 		// KING
@@ -335,28 +330,28 @@ public class Controller
 			System.out.print("\nPossible moves for King at " + position + ": ");
 			
 			// top left
-			kingTopLeftPossibleMove(piece, x1, y1);
+			kingTopLeftPossibleMove(piece, positionCheck);
 			
 			// top
-			kingTopPossibleMove(piece, x1, y1);
+			kingTopPossibleMove(piece, positionCheck);
 			
 			// top right
-			kingTopRightPossibleMove(piece, x1, y1);
+			kingTopRightPossibleMove(piece, positionCheck);
 			
 			// right
-			kingRightPossibleMove(piece, x1, y1);
+			kingRightPossibleMove(piece, positionCheck);
 			
 			// bottom right
-			kingBottomRightPossibleMove(piece, x1, y1);
+			kingBottomRightPossibleMove(piece, positionCheck);
 			
 			// bottom
-			kingBottomPossibleMove(piece, x1, y1);
+			kingBottomPossibleMove(piece, positionCheck);
 			
 			// bottom left
-			kingBottomLeftPossibleMove(piece, x1, y1);
+			kingBottomLeftPossibleMove(piece, positionCheck);
 			
 			// left
-			kingLeftPossibleMove(piece, x1, y1);
+			kingLeftPossibleMove(piece, positionCheck);
 		}
 	}
 	
@@ -544,8 +539,11 @@ public class Controller
 		return moveCompletable;
 	}
 	
-	private void topPossibleMoves(Piece piece, int x1, int y1)
+	private void topPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if(y1 >= 0 && y1 < 7)
 		{				
 			boolean pieceNotFound = true;
@@ -567,8 +565,11 @@ public class Controller
 			}
 		}			
 	}	
-	private void rightPossibleMoves(Piece piece, int x1, int y1)
+	private void rightPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if(x1 >= 0 && x1 < 7)
 		{
 			boolean pieceNotFound = true;
@@ -590,8 +591,11 @@ public class Controller
 			}
 		}
 	}
-	private void bottomPossibleMoves(Piece piece, int x1, int y1)
+	private void bottomPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if(y1 >= 1 && y1 <= 7)
 		{				
 			boolean pieceNotFound = true;
@@ -612,8 +616,11 @@ public class Controller
 			}
 		}
 	}
-	private void leftPossibleMoves(Piece piece, int x1, int y1)
+	private void leftPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if(x1 >= 1 && x1 <= 7)
 		{
 			boolean pieceNotFound = true;
@@ -635,8 +642,11 @@ public class Controller
 			}
 		}
 	}
-	private void topLeftPossibleMoves(Piece piece, int x1, int y1)
+	private void topLeftPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
 		{
 			boolean pieceNotFound = true;
@@ -659,8 +669,11 @@ public class Controller
 			}
 		}
 	}	
-	private void topRightPossibleMoves(Piece piece, int x1, int y1)
+	private void topRightPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
 		{
 			boolean pieceNotFound = true;
@@ -683,8 +696,11 @@ public class Controller
 			}
 		}
 	}	
-	private void bottomRightPossibleMoves(Piece piece, int x1, int y1)
+	private void bottomRightPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 <= maxHeight))
 		{
 			boolean pieceNotFound = true;
@@ -707,8 +723,11 @@ public class Controller
 			}
 		}
 	}
-	private void bottomLeftPossibleMoves(Piece piece, int x1, int y1)
+	private void bottomLeftPossibleMoves(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			boolean pieceNotFound = true;
@@ -731,8 +750,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightTopLeftPossibleMove(Piece piece, int x1, int y1)
+	private void knightTopLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 2 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
 		{
 			if(board.getChessBoardSquare(x1-2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -752,8 +774,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightTopTopLeftPossibleMove(Piece piece, int x1, int y1)
+	private void knightTopTopLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 5))
 		{
 			if(board.getChessBoardSquare(x1-1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -773,8 +798,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightTopTopRightPossibleMove(Piece piece, int x1, int y1)
+	private void knightTopTopRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 < 6 && y1 <= 5))
 		{
 			if(board.getChessBoardSquare(x1+1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -794,8 +822,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightTopRightPossibleMove(Piece piece, int x1, int y1)
+	private void knightTopRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 <= 5 && y1 <= 6))
 		{
 			if(board.getChessBoardSquare(x1+2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -815,8 +846,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightBottomRightPossibleMove(Piece piece, int x1, int y1)
+	private void knightBottomRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 1) && (x1 <= 5 && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1+2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -836,8 +870,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightBottomBottomRightPossibleMove(Piece piece, int x1, int y1)
+	private void knightBottomBottomRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 2) && (x1 <= 6 && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1+1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -857,8 +894,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightBottomBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	private void knightBottomBottomLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 2) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1-1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -878,8 +918,11 @@ public class Controller
 			}
 		}
 	}
-	private void knightBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	private void knightBottomLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 2 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1-2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -899,8 +942,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingTopLeftPossibleMove(Piece piece, int x1, int y1)
+	private void kingTopLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
 		{
 			if(board.getChessBoardSquare(x1-1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -920,8 +966,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingTopPossibleMove(Piece piece, int x1, int y1)
+	private void kingTopPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
 		{
 			if(board.getChessBoardSquare(x1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -941,8 +990,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingTopRightPossibleMove(Piece piece, int x1, int y1)
+	private void kingTopRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
 		{
 			if(board.getChessBoardSquare(x1+1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -962,8 +1014,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingRightPossibleMove(Piece piece, int x1, int y1)
+	private void kingRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1+1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -983,8 +1038,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingBottomRightPossibleMove(Piece piece, int x1, int y1)
+	private void kingBottomRightPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1+1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -1004,8 +1062,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingBottomPossibleMove(Piece piece, int x1, int y1)
+	private void kingBottomPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 0 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -1025,8 +1086,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	private void kingBottomLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1-1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
@@ -1046,8 +1110,11 @@ public class Controller
 			}
 		}
 	}
-	private void kingLeftPossibleMove(Piece piece, int x1, int y1)
+	private void kingLeftPossibleMove(Piece piece, Position position)
 	{
+		int x1 = position.getPositionX();
+		int y1 = position.getPositionY();
+		
 		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 < maxHeight))
 		{
 			if(board.getChessBoardSquare(x1-1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
