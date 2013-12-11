@@ -30,4 +30,10 @@ public class Position
 	{
 		this.positionY = positionY;
 	}
+
+	@Override
+	public String toString() 
+	{
+		return "Position [positionX=" + positionX + ", positionY=" + positionY + "]";
+	}
 }

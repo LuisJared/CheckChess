@@ -1,13 +1,18 @@
 package Chess;
 
+import java.util.ArrayList;
+
 public class Controller 
 {
 	private Board board = new Board();
+	private Team team = new Team();
 	private boolean whiteTurn;
 	private int totalTurns = 0;
 	private int pieceAddCount = 0;
 	private String white = "White";
 	private String black = "Black";
+	private int maxWidth = 8;
+	private int maxHeight = 8;
 	
 	private boolean whitePlayerTurn()
 	{		
@@ -21,6 +26,24 @@ public class Controller
 		Square newSquare = new Square(piece, position);
 		board.setChessBoardSquare(newSquare, x, y);
 		
+		if(piece.getPieceColor().equals(white))
+		{
+			team.addWhitePieceToTeam(piece, position);
+		}
+		else
+		{
+			team.addBlackPieceToTeam(piece, position);
+		}
+		
+		if(piece.getPieceType().equals("k"))
+		{
+			team.setWhiteKing(piece);
+		}
+		if(piece.getPieceType().equals("K"))
+		{
+			team.setBlackKing(piece);
+		}
+		
 		pieceAddCount++;
 		if(pieceAddCount == 16)
 		{
@@ -29,18 +52,18 @@ public class Controller
 		}
 	}
 
-	public void movePieceOnBoard(String command, Position start, Position end)
+	public void movePieceOnBoard(String command, Position pieceStart, Position pieceEnd)
 	{
-		int x1 = start.getPositionX();
-		int y1 = start.getPositionY();
-		int x2 = end.getPositionX();
-		int y2 = end.getPositionY();
+		int x1 = pieceStart.getPositionX();
+		int y1 = pieceStart.getPositionY();
+		int x2 = pieceEnd.getPositionX();
+		int y2 = pieceEnd.getPositionY();
 		String startSpot = command.substring(0,2);
 		String endSpot = command.substring(3,5);
 		String player = "";
 		player = whitePlayerTurn() ? "White" : "Black";        
 		Piece piece = board.getChessBoardSquare(x1, y1).getPiece();
-		Square newSquare = new Square(board.getChessBoardSquare(x2, y2).getPiece(), end);
+		Square newSquare = new Square(board.getChessBoardSquare(x2, y2).getPiece(), pieceEnd);
 		Pawn dummyPawn = new Pawn("Pawn");
 
 		System.out.println("\nIt is Player " + player + "'s turn");
@@ -52,12 +75,12 @@ public class Controller
 				if(dummyPawn.validWhiteMovement(x1, y1, x2, y2, newSquare))
 				{
 					getPiecePath(x1, y1, x2, y2);
-					movePieceCheck(piece, x1, y1, x1, y2, start, end, command, startSpot, endSpot);
+					movePieceCheck(piece, x1, y1, x1, y2, pieceStart, pieceEnd, command, startSpot, endSpot);
 				}
 				else if(dummyPawn.pawnCapturing(x1, y1, x2, y2, piece.getPieceColor(), newSquare))
 				{
 					getPiecePath(x1, y1, x2, y2);
-					movePieceCheck(piece, x1, y1, x2, y2, start, end, command, startSpot, endSpot);
+					movePieceCheck(piece, x1, y1, x2, y2, pieceStart, pieceEnd, command, startSpot, endSpot);
 				}
 				else
 				{
@@ -70,12 +93,12 @@ public class Controller
 				if(dummyPawn.validBlackMovement(x1, y1, x2, y2, newSquare))
 				{
 					getPiecePath(x1, y1, x2, y2);
-					movePieceCheck(piece, x1, y1, x1, y2, start, end, command, startSpot, endSpot);
+					movePieceCheck(piece, x1, y1, x1, y2, pieceStart, pieceEnd, command, startSpot, endSpot);
 				}
 				else if(dummyPawn.pawnCapturing(x1, y1, x2, y2, piece.getPieceColor(), newSquare))
 				{
 					getPiecePath(x1, y1, x2, y2);
-					movePieceCheck(piece, x1, y1, x2, y2, start, end, command, startSpot, endSpot);
+					movePieceCheck(piece, x1, y1, x2, y2, pieceStart, pieceEnd, command, startSpot, endSpot);
 				}
 				else
 				{
@@ -89,8 +112,7 @@ public class Controller
 			if(piece.validMovement(x1, y1, x2, y2))
 			{
 				getPiecePath(x1, y1, x2, y2);
-				possibleMoves(piece, x1, y1);
-				movePieceCheck(piece, x1, y1, x2, y2, start, end, command, startSpot, endSpot);
+				movePieceCheck(piece, x1, y1, x2, y2, pieceStart, pieceEnd, command, startSpot, endSpot);
 			}
 			else
 			{
@@ -102,26 +124,41 @@ public class Controller
 	}
 
 	private void movePieceCheck(Piece piece, int x1, int y1, int x2, int y2, Position start, Position end, String command, String startSpot, String endSpot)
-	{		                     
-		if(kingIsInCheck(piece, x1, y1))
+	{		 
+		String color = whitePlayerTurn() ? white : black;
+		
+		if(kingIsInCheck())
 		{
-			
+			System.out.println("\nPlayer " + color + "'s King is in Check!");
+		}
+		else
+		{
+			System.out.println("\nPlayer " + color + "'s King is not in Check");
 		}
 		if(board.getChessBoardSquare(x2, y2).getPiece().getPieceColor() != (piece.getPieceColor()))
 		{
 			if(otherPieceExistsInPath(x1, y1, x2, y2))
 			{
-				String color = whitePlayerTurn() ? white : black;
-
 				if(piece.getPieceColor() == color)
 				{
-
 					board.setChessBoardSquare(new Square(piece, end), x2, y2);
 
 					board.setChessBoardSquare(new Square(new Piece("-"), start), x1, y1);
 					board.getChessBoardSquare(x1, y1).getPiece().setPieceColor("-");
 
 					totalTurns++;
+					
+					if(piece.getPieceType().equals("k"))
+					{
+						Position newPosition = new Position(x2, y2);
+						
+						team.setWhiteKingPosition(newPosition);
+					}
+					if(piece.getPieceType().equals("K"))
+					{
+						Position newPosition = new Position(x2, y2);
+						team.setBlackKingPosition(newPosition);
+					}
 
 					System.out.println();
 					System.out.print("Successfully moved piece " + startSpot + " to " + endSpot);
@@ -148,586 +185,178 @@ public class Controller
 		}
 	}
 	
-	private boolean kingIsInCheck(Piece piece, int x1, int y1)
+	private boolean kingIsInCheck()
 	{
 		boolean inCheck = false;
+		Position whiteKingPosition = team.getKingFromWhiteTeam();
+		Position blackKingPosition = team.getKingFromBlackTeam();
+		String colorCheck = whitePlayerTurn() ? "Black" : "White";
 		
+		System.out.println("\nPieces that can move for " + colorCheck + "'s Team");
 		
+		for(int y = 0; y < maxWidth; y++)
+		{
+			for(int x = 0; x < maxHeight; x++)
+			{
+				if(board.getChessBoardSquare(x, y).getPiece() != board.getBlankPiece())
+				{
+					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor().equals(colorCheck))
+					{
+						Position positionCheck = new Position(x, y);
+						Piece currentPiece = board.getChessBoardSquare(x, y).getPiece();
+						ArrayList<Position> pieceMoves = board.getChessBoardSquare(x, y).getPiece().getPossibleMoves();
+						
+						possibleMovesForPiece(currentPiece, positionCheck);
+						
+						for(int i = 0; i < pieceMoves.size(); i++)
+						{
+							if((pieceMoves.get(i).getPositionX() == whiteKingPosition.getPositionX() 
+									&& pieceMoves.get(i).getPositionY() == whiteKingPosition.getPositionY())
+								||
+								(pieceMoves.get(i).getPositionX() == blackKingPosition.getPositionX())
+									&& pieceMoves.get(i).getPositionY() == blackKingPosition.getPositionY()
+							)
+							{
+								inCheck = true;
+							}
+						}
+					}
+				}
+			}
+		}
 		
 		return inCheck;
 	}
-	
-	private void possibleMoves(Piece piece, int x1, int y1)
+
+	private void possibleMovesForPiece(Piece piece, Position positionCheck)
 	{		
+		int x1 = positionCheck.getPositionX();
+		int y1 = positionCheck.getPositionY();
 		String pieceType = piece.getPieceType().toLowerCase();
 		char column = (char) (x1 + 65);
 		String row = ""+(y1+1);
 		String position = column + row;
-		int maxWidth = 8;
-		int maxHeight = 8;
 		
 		// ROOK
 		if(pieceType.equals("r"))
 		{
 			System.out.print("\nPossible moves for Rook at " + position + ": ");
 			// origin to top
-			if(y1 >= 0 && y1 < 7)
-			{				
-				boolean pieceNotFound = true;
-
-				for (int i = y1 + 1; pieceNotFound && (i < maxHeight) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i++)
-				{
-					System.out.print(" " + coordinateToPosition(x1, i));
-					if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}			
+			topPossibleMoves(piece, x1, y1);
+			
 			// origin to bottom
-			if(y1 >= 1 && y1 <= 7)
-			{				
-				boolean pieceNotFound = true;
-				for (int i = y1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i--)
-				{
-					System.out.print(" " + coordinateToPosition(x1, i));
-					if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						}
-					}
-				}
-			}
+			bottomPossibleMoves(piece, x1, y1);
+			
 			// origin to right
-			if(x1 >= 0 && x1 < 7)
-			{
-				boolean pieceNotFound = true;
-
-				for (int i = x1 + 1; pieceNotFound && (i < maxWidth) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i++)
-				{
-					System.out.print(" " + coordinateToPosition(i, y1));
-					if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			rightPossibleMoves(piece, x1, y1);
+			
 			// origin to left
-			if(x1 >= 1 && x1 <= 7)
-			{
-				boolean pieceNotFound = true;
-
-				for (int i = x1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i--)
-				{
-					System.out.print(" " + coordinateToPosition(i, y1));
-					if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
-		}
-		
+			leftPossibleMoves(piece, x1, y1);			
+		}		
 		// BISHOP
 		else if(pieceType.equals("b"))
 		{
 			System.out.print("\nPossible moves for Bishop at " + position + ": ");
 			// origin to top left
-			if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
-			{
-				boolean pieceNotFound = true;
-
-				int y = y1 + 1;
-				for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y++) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
-			// origin to bottom right
-			if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 <= maxHeight))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 - 1;
-				for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y--) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			topLeftPossibleMoves(piece, x1, y1);
+			
 			// origin to top right
-			if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 + 1;
-				for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y++) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			topRightPossibleMoves(piece, x1, y1);
+			
 			// origin to bottom left
-			if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 - 1;
-				for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y--) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			bottomLeftPossibleMoves(piece, x1, y1);
+			
+			// origin to bottom right
+			bottomRightPossibleMoves(piece, x1, y1);			
 		}
 		
 		// QUEEN
 		else if(pieceType.equals("q"))
 		{
 			System.out.print("\nPossible moves for Queen at " + position + ": ");
-			// origin to top
-			if(y1 >= 0 && y1 < 7)
-			{				
-				boolean pieceNotFound = true;
-
-				for (int i = y1 + 1; pieceNotFound && (i < maxHeight) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i++)
-				{
-					System.out.print(" " + coordinateToPosition(x1, i));
-					if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}			
-			// origin to bottom
-			if(y1 >= 1 && y1 <= 7)
-			{				
-				boolean pieceNotFound = true;
-				for (int i = y1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i--)
-				{
-					System.out.print(" " + coordinateToPosition(x1, i));
-					if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						}
-					}
-				}
-			}
-			// origin to the right
-			if(x1 >= 0 && x1 < 7)
-			{
-				boolean pieceNotFound = true;
-
-				for (int i = x1 + 1; pieceNotFound && (i < maxWidth) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i++)
-				{
-					System.out.print(" " + coordinateToPosition(i, y1));
-					if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
-			// origin to the left
-			if(x1 >= 1 && x1 <= 7)
-			{
-				boolean pieceNotFound = true;
-
-				for (int i = x1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i--)
-				{
-					System.out.print(" " + coordinateToPosition(i, y1));
-					if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
 			// origin to top left
-			if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
-			{
-				boolean pieceNotFound = true;
-
-				int y = y1 + 1;
-				for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y++) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
-			// origin to bottom right
-			if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 <= maxHeight))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 - 1;
-				for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y--) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			topLeftPossibleMoves(piece, x1, y1);
+			
+			// origin to top
+			topPossibleMoves(piece, x1, y1);
+			
 			// origin to top right
-			if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 + 1;
-				for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y++) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			topRightPossibleMoves(piece, x1, y1);
+			
+			// origin to the right
+			rightPossibleMoves(piece, x1, y1);
+			
+			// origin to bottom right
+			bottomRightPossibleMoves(piece, x1, y1);
+			
+			// origin to bottom
+			bottomPossibleMoves(piece, x1, y1);
+			
 			// origin to bottom left
-			if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				boolean pieceNotFound = true;
-				
-				int y = y1 - 1;
-				for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y--) 
-				{
-					System.out.print(" " + coordinateToPosition(x, y));
-					if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
-					{
-						pieceNotFound = false;
-						if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
-						{
-							System.out.print("*");
-						} 
-					}
-				}
-			}
+			bottomLeftPossibleMoves(piece, x1, y1);
+			
+			// origin to the left
+			leftPossibleMoves(piece, x1, y1);			
 		}
 		
 		// KNIGHT
 		else if(pieceType.equals("n"))
 		{
 			System.out.print("\nPossible moves for Knight at " + position + ": ");
+			
 			// top left
-			if((x1 >= 2 && y1 >= 0) && (x1 < maxWidth && y1 <= 7))
-			{
-				if(board.getChessBoardSquare(x1-2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-2, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-2, y1+1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-2, y1+1));
-				}
-			}
+			knightTopLeftPossibleMove(piece, x1, y1);
+			
 			// top top left
-			if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 5))
-			{
-				if(board.getChessBoardSquare(x1-1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-1, y1+2).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-1, y1+2)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-1, y1+2));
-				}
-			}
+			knightTopTopLeftPossibleMove(piece, x1, y1);
+			
 			// top top right
-			if((x1 >= 0 && y1 >= 0) && (x1 < 6 && y1 <= 5))
-			{
-				if(board.getChessBoardSquare(x1+1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+1, y1+2).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+1, y1+2)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+1, y1+2));
-				}
-			}
+			knightTopTopRightPossibleMove(piece, x1, y1);
+			
 			// top right
-			if((x1 >= 0 && y1 >= 0) && (x1 <= 5 && y1 <= 6))
-			{
-				if(board.getChessBoardSquare(x1+2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+2, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+2, y1+1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+2, y1+1));
-				}
-			}
+			knightTopRightPossibleMove(piece, x1, y1);
+			
 			// bottom right
-			if((x1 >= 0 && y1 >= 1) && (x1 <= 5 && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1+2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+2, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+2, y1-1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+2, y1-1));
-				}
-			}
+			knightBottomRightPossibleMove(piece, x1, y1);
+			
 			// bottom bottom right
-			if((x1 >= 0 && y1 >= 2) && (x1 <= 6 && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1+1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+1, y1-2).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+1, y1-2)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+1, y1-2));
-				}
-			}
+			knightBottomBottomRightPossibleMove(piece, x1, y1);
+			
 			// bottom bottom left
-			if((x1 >= 1 && y1 >= 2) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1-1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-1, y1-2).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-1, y1-2)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-1, y1-2));
-				}
-			}
+			knightBottomBottomLeftPossibleMove(piece, x1, y1);
+			
 			// bottom left
-			if((x1 >= 2 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1-2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-2, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-2, y1-1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-2, y1-1));
-				}
-			}
+			knightBottomLeftPossibleMove(piece, x1, y1);
 		}
 		
 		// KING
 		else if(pieceType.equals("k"))
 		{
 			System.out.print("\nPossible moves for King at " + position + ": ");
+			
 			// top left
-			if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
-			{
-				if(board.getChessBoardSquare(x1-1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-1, y1+1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-1, y1+1));
-				}
-			}
+			kingTopLeftPossibleMove(piece, x1, y1);
+			
 			// top
-			if((x1 >= 0 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
-			{
-				if(board.getChessBoardSquare(x1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1, y1+1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1, y1+1));
-				}
-			}
+			kingTopPossibleMove(piece, x1, y1);
+			
 			// top right
-			if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
-			{
-				if(board.getChessBoardSquare(x1+1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+1, y1+1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+1, y1+1));
-				}
-			}
+			kingTopRightPossibleMove(piece, x1, y1);
+			
 			// right
-			if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1+1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+1, y1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+1, y1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+1, y1));
-				}
-			}
+			kingRightPossibleMove(piece, x1, y1);
+			
 			// bottom right
-			if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1+1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1+1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1+1, y1-1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1+1, y1-1));
-				}
-			}
+			kingBottomRightPossibleMove(piece, x1, y1);
+			
 			// bottom
-			if((x1 >= 0 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1, y1-1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1, y1-1));
-				}
-			}
+			kingBottomPossibleMove(piece, x1, y1);
+			
 			// bottom left
-			if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1-1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-1, y1-1)+"*");
-					} 
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-1, y1-1));
-				}
-			}
+			kingBottomLeftPossibleMove(piece, x1, y1);
+			
 			// left
-			if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 < maxHeight))
-			{
-				if(board.getChessBoardSquare(x1-1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
-				{
-					if(board.getChessBoardSquare(x1-1, y1).getPiece().getPieceColor() != piece.getPieceColor())
-					{
-						System.out.print(" " + coordinateToPosition(x1-1, y1)+"*");
-					}
-				}
-				else
-				{
-					System.out.print(" " + coordinateToPosition(x1-1, y1));
-				}
-			}
+			kingLeftPossibleMove(piece, x1, y1);
 		}
 	}
 	
@@ -913,5 +542,529 @@ public class Controller
 			}
 		}
 		return moveCompletable;
+	}
+	
+	private void topPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if(y1 >= 0 && y1 < 7)
+		{				
+			boolean pieceNotFound = true;
+
+			for (int i = y1 + 1; pieceNotFound && (i < maxHeight) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i++)
+			{
+				System.out.print(" " + coordinateToPosition(x1, i));
+				Position newMove = new Position(x1, i);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}			
+	}	
+	private void rightPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if(x1 >= 0 && x1 < 7)
+		{
+			boolean pieceNotFound = true;
+
+			for (int i = x1 + 1; pieceNotFound && (i < maxWidth) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i++)
+			{
+				System.out.print(" " + coordinateToPosition(i, y1));
+				Position newMove = new Position(i, y1);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}
+	private void bottomPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if(y1 >= 1 && y1 <= 7)
+		{				
+			boolean pieceNotFound = true;
+			for (int i = y1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor()); i--)
+			{
+				System.out.print(" " + coordinateToPosition(x1, i));
+				Position newMove = new Position(x1, i);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x1, i).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x1, i).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					}
+				}
+			}
+		}
+	}
+	private void leftPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if(x1 >= 1 && x1 <= 7)
+		{
+			boolean pieceNotFound = true;
+
+			for (int i = x1 - 1; pieceNotFound && (i >= 0) && (board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor()); i--)
+			{
+				System.out.print(" " + coordinateToPosition(i, y1));
+				Position newMove = new Position(i, y1);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(i, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(i, y1).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}
+	private void topLeftPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
+		{
+			boolean pieceNotFound = true;
+
+			int y = y1 + 1;
+			for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y++) 
+			{
+				System.out.print(" " + coordinateToPosition(x, y));
+				Position newMove = new Position(x, y);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}	
+	private void topRightPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
+		{
+			boolean pieceNotFound = true;
+			
+			int y = y1 + 1;
+			for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y < maxHeight) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y++) 
+			{
+				System.out.print(" " + coordinateToPosition(x, y));
+				Position newMove = new Position(x, y);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}	
+	private void bottomRightPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 <= maxHeight))
+		{
+			boolean pieceNotFound = true;
+			
+			int y = y1 - 1;
+			for (int x = x1 + 1; pieceNotFound && (x < maxWidth) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x++, y--) 
+			{
+				System.out.print(" " + coordinateToPosition(x, y));
+				Position newMove = new Position(x, y);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}
+	private void bottomLeftPossibleMoves(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			boolean pieceNotFound = true;
+			
+			int y = y1 - 1;
+			for (int x = x1 - 1; pieceNotFound && (x >= 0) && (y >= 0) && (board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor()); x--, y--) 
+			{
+				System.out.print(" " + coordinateToPosition(x, y));
+				Position newMove = new Position(x, y);
+				piece.setPossibleMoves(newMove);
+				
+				if (board.getChessBoardSquare(x, y).getPiece().getPieceType() != board.getBlankPiece().getPieceType()) 
+				{
+					pieceNotFound = false;
+					if(board.getChessBoardSquare(x, y).getPiece().getPieceColor() != piece.getPieceColor())
+					{
+						System.out.print("*");
+					} 
+				}
+			}
+		}
+	}
+	private void knightTopLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 2 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
+		{
+			if(board.getChessBoardSquare(x1-2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-2, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-2, y1+1)+"*");
+					Position newMove = new Position(x1-2, y1+1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-2, y1+1));
+				Position newMove = new Position(x1-2, y1+1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightTopTopLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 5))
+		{
+			if(board.getChessBoardSquare(x1-1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-1, y1+2).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-1, y1+2)+"*");
+					Position newMove = new Position(x1-1, y1+2);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-1, y1+2));
+				Position newMove = new Position(x1-1, y1+2);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightTopTopRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 < 6 && y1 <= 5))
+		{
+			if(board.getChessBoardSquare(x1+1, y1+2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+1, y1+2).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+1, y1+2)+"*");
+					Position newMove = new Position(x1+1, y1+2);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+1, y1+2));
+				Position newMove = new Position(x1+1, y1+2);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightTopRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 <= 5 && y1 <= 6))
+		{
+			if(board.getChessBoardSquare(x1+2, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+2, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+2, y1+1)+"*");
+					Position newMove = new Position(x1+2, y1+1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+2, y1+1));
+				Position newMove = new Position(x1+2, y1+1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightBottomRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 1) && (x1 <= 5 && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1+2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+2, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+2, y1-1)+"*");
+					Position newMove = new Position(x1+2, y1-1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+2, y1-1));
+				Position newMove = new Position(x1+2, y1-1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightBottomBottomRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 2) && (x1 <= 6 && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1+1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+1, y1-2).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+1, y1-2)+"*");
+					Position newMove = new Position(x1+1, y1-2);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+1, y1-2));
+				Position newMove = new Position(x1+1, y1-2);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightBottomBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 2) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1-1, y1-2).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-1, y1-2).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-1, y1-2)+"*");
+					Position newMove = new Position(x1-1, y1-2);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-1, y1-2));
+				Position newMove = new Position(x1-1, y1-2);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void knightBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 2 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1-2, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-2, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-2, y1-1)+"*");
+					Position newMove = new Position(x1-2, y1-1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-2, y1-1));
+				Position newMove = new Position(x1-2, y1-1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingTopLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
+		{
+			if(board.getChessBoardSquare(x1-1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-1, y1+1)+"*");
+					Position newMove = new Position(x1-1, y1+1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-1, y1+1));
+				Position newMove = new Position(x1-1, y1+1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingTopPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 < maxWidth && y1 <= 6))
+		{
+			if(board.getChessBoardSquare(x1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1, y1+1)+"*");
+					Position newMove = new Position(x1, y1+1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1, y1+1));
+				Position newMove = new Position(x1, y1+1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingTopRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 <= 6))
+		{
+			if(board.getChessBoardSquare(x1+1, y1+1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+1, y1+1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+1, y1+1)+"*");
+					Position newMove = new Position(x1+1, y1+1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+1, y1+1));
+				Position newMove = new Position(x1+1, y1+1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 0) && (x1 <= 6 && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1+1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+1, y1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+1, y1)+"*");
+					Position newMove = new Position(x1+1, y1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+1, y1));
+				Position newMove = new Position(x1+1, y1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingBottomRightPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 1) && (x1 <= 6 && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1+1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1+1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1+1, y1-1)+"*");
+					Position newMove = new Position(x1+1, y1-1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1+1, y1-1));
+				Position newMove = new Position(x1+1, y1-1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingBottomPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 0 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1, y1-1)+"*");
+					Position newMove = new Position(x1, y1-1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1, y1-1));
+				Position newMove = new Position(x1, y1-1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingBottomLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 1) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1-1, y1-1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-1, y1-1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-1, y1-1)+"*");
+					Position newMove = new Position(x1-1, y1-1);
+					piece.setPossibleMoves(newMove);
+				} 
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-1, y1-1));
+				Position newMove = new Position(x1-1, y1-1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
+	}
+	private void kingLeftPossibleMove(Piece piece, int x1, int y1)
+	{
+		if((x1 >= 1 && y1 >= 0) && (x1 < maxWidth && y1 < maxHeight))
+		{
+			if(board.getChessBoardSquare(x1-1, y1).getPiece().getPieceType() != board.getBlankPiece().getPieceType())
+			{
+				if(board.getChessBoardSquare(x1-1, y1).getPiece().getPieceColor() != piece.getPieceColor())
+				{
+					System.out.print(" " + coordinateToPosition(x1-1, y1)+"*");
+					Position newMove = new Position(x1-1, y1);
+					piece.setPossibleMoves(newMove);
+				}
+			}
+			else
+			{
+				System.out.print(" " + coordinateToPosition(x1-1, y1));
+				Position newMove = new Position(x1-1, y1);
+				piece.setPossibleMoves(newMove);
+			}
+		}
 	}
 }

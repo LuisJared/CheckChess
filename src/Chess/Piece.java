@@ -6,7 +6,7 @@ public class Piece
 {
 	private String pieceType = "";
 	private String pieceColor = "";
-	private ArrayList<String> possibleMoves = new ArrayList<String>();
+	private ArrayList<Position> possibleMoves = new ArrayList<Position>();
 	protected double minBoardSize = 0;
 	protected double maxBoardSize = 8;
 	
@@ -42,13 +42,18 @@ public class Piece
 		return move;
 	}
 
-	public ArrayList<String> getPossibleMoves() 
+	public ArrayList<Position> getPossibleMoves() 
 	{
 		return possibleMoves;
 	}
 
-	public void setPossibleMoves(String possibleMoves) 
+	public void setPossibleMoves(Position possibleMove)
 	{
-		this.possibleMoves.add(possibleMoves);
+		possibleMoves.add(possibleMove);
+	}
+	
+	private void resetPossibleMoves()
+	{
+		possibleMoves.clear();
 	}
 }
